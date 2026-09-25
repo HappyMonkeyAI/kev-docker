@@ -1,0 +1,37 @@
+services:
+  kev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: kev-server:local
+    ports:
+      - "${KEV_PORT:-8008}:8008"
+    environment:
+      KEV_RUN: "jaredpalmer/${KEV_MODEL:-kev-4b}"
+      KEV_HOST: "0.0.0.0"
+      KEV_PORT: "8008"
+      KEV_API_KEY: "${KEV_API_KEY:-}"
+    volumes:
+      - kev-hf-cache:/root/.cache/huggingface
+    shm_size: 2gb
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8008/v1/models', timeout=5).status==200 else 1)"
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 300s
+
+volumes:
+  kev-hf-cache:
