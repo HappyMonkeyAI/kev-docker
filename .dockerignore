@@ -6,3 +6,10 @@ __pycache__/
 # VCS / local env
 .git/
 .env
+# Private evaluation data and local outputs
+.env.*
+benchmarks/private/
+benchmarks/public/raw/
+benchmarks/public/*.jsonl
+benchmark-results*.json
+smoke-results*.json

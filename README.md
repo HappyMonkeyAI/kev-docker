@@ -2,7 +2,7 @@
 
 Serve a released Kev checkpoint as a System One endpoint from Windows (or any host with
 Docker + an NVIDIA GPU), launched from the Docker Desktop GUI or `docker compose`.
-No WSL shell, no portproxy, no firewall script — Docker Desktop publishes the port on
+No WSL shell, no portproxy, no firewall script — With KEV_BIND_HOST=0.0.0.0, Docker Desktop publishes the port on
 the host's LAN interface automatically.
 
 The kev Python package itself is vendored under `kev-src/` (Apache-2.0, see `kev-src/LICENSE`),
@@ -18,7 +18,7 @@ so this repo builds a fully self-contained image — no other checkout needed.
 ## Quickstart
 
 ```powershell
-Copy-Item .env.example .env      # pick a model in .env, e.g. KEV_MODEL=kev-4b
+Copy-Item .env.example .env      # pick a model in .env, e.g. KEV_RUN=jaredpalmer/kev-4b
 docker compose up -d --build
 ```
 
@@ -37,7 +37,7 @@ Point agents at `KEV_API_BASE_URL=http://<your-lan-ip>:8008`.
 
 ## Model selection
 
-`KEV_MODEL` in `.env` maps to `jaredpalmer/<KEV_MODEL>`:
+`KEV_RUN` in `.env` is the full checkpoint identifier (for example `jaredpalmer/kev-4b@<revision>`). Pin a verified Hub revision to prevent model drift. Existing `KEV_MODEL` settings remain supported when `KEV_RUN` is unset. Available model names:
 
 | KEV_MODEL  | VRAM            | Notes                                  |
 | ---------- | --------------- | -------------------------------------- |
@@ -57,7 +57,7 @@ docker compose logs -f        # follow the serve log
 docker compose up -d --build  # after a new release or a kev-src refresh
 ```
 
-The container publishes on the host's `0.0.0.0:<KEV_PORT>` directly, so nothing else is
+The container defaults to `127.0.0.1:<KEV_PORT>`. For LAN use, set `KEV_BIND_HOST=0.0.0.0` and a non-empty `KEV_API_KEY` in `.env`. With LAN binding, nothing else is
 needed for LAN reachability. (If you previously had a `wsl-lan-setup.ps1` portproxy on the
 same port, delete it once: `netsh interface portproxy delete v4tov4 listenaddress=0.0.0.0
 listenport=<KEV_PORT>` — otherwise two things fight over the port.)
@@ -92,3 +92,42 @@ docker compose up -d --build
 
 MIT for this repo (see `LICENSE`). The vendored `kev-src/` package is Apache-2.0
 (`kev-src/LICENSE`), copyright its respective authors.
+## Authentication and build baseline
+
+When KEV_API_KEY is set, the health check authenticates using the container's key.
+Configure the same KEV_API_KEY in the MCP adapter's launch environment; its incoming
+KEV_MCP_AUTH_TOKEN is a separate credential. Authenticated API clients must send
+Authorization: Bearer <key>, including calls to /v1/models.
+
+The build installs requirements-serving.lock without dependency resolution to
+preserve the existing Torch/Triton override. See SOURCE.md for provenance and
+remaining reproducibility limits. Do not refresh package versions implicitly.
+
+Changing .env.example does not update your existing .env. Optionally migrate KEV_MODEL to
+KEV_RUN and choose KEV_BIND_HOST explicitly before recreating the container.
+The existing cache volume remains unchanged.
+
+## Live smoke test
+
+Use a running server and set KEV_API_KEY in the client environment when required:
+
+```powershell
+python smoke-test.py --url http://127.0.0.1:8008 --output smoke-results.json
+```
+
+The test requires the server to report a CUDA device. It checks rejection of
+unauthenticated requests when a key is supplied, response probabilities and score
+bounds, and separate/permutation endpoints. It records first-request and warm
+end-to-end latency. Results use a synthetic billing example; they do not establish
+domain accuracy or probability calibration. Results are excluded from Git.
+
+The example environment now pins the locally cached Kev-4B checkpoint revision;
+existing .env files are not changed automatically. The Python image is digest-pinned.
+
+## Agent routing benchmark
+
+Run `python benchmark.py benchmarks/agent-routing.synthetic.jsonl` against a
+running server. Set `KEV_API_KEY` when required. See `benchmarks/README.md` for
+label format and split handling, and `benchmarks/BASELINE.md` for the first live
+synthetic results. No automatic routing or deferral policy is enabled.
+Verify metric calculations with `python -m unittest test_benchmark -v`.

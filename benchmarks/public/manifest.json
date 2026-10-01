@@ -1,0 +1,57 @@
+{
+  "raw_sha256": {
+    "toolselect-LICENSE": "6d489af6292662d9e36d34ce49423784984a5f6e41d7b58f49b01264df59fa03",
+    "toolselect-train.csv": "2f7ef80313e5fc94b557c661b5560e41ee936992e243c6572b71c73745d366d3",
+    "when2call-README.md": "14217217ba73b9421b5c8ac9b35b0c210836212ea007b65ec866513fdb67aa75",
+    "when2call_test_mcq.jsonl": "8c3694e583eeeb8dbc297e6cd90da70efc68efa4b6adb7227523e828c6b7b14c"
+  },
+  "converted_sha256": {
+    "toolselect.jsonl": "8ec3af82552fd467e8ed34c2169d1181f26bb45f0b27fb3368eec352daedd273",
+    "when2call.full.jsonl": "159897d28fa934c499a951242a39cd5ea4b6e53c5916fa448200655b9b446900",
+    "when2call.sample.jsonl": "72689be8e8e14dd162fca9f8253d141ceebe08dd967ed3ad2638f780276e6166"
+  },
+  "when2call": {
+    "revision": "0582f7749df63a96fdc3070932e83e72396ace53",
+    "license": "CC-BY-4.0",
+    "attribution": "NVIDIA Corporation; Ross, Mahabaleshwarka and Suhara, When2Call (NAACL 2025)",
+    "url": "https://huggingface.co/datasets/nvidia/When2Call",
+    "full_rows": 3652,
+    "sample_rows": 400,
+    "sample_labels": {
+      "cannot_answer": 134,
+      "request_for_info": 133,
+      "tool_call": 133
+    },
+    "caveat": "Published evaluation source for Kev; not a fresh untouched holdout. Balanced sample, not natural prevalence."
+  },
+  "toolselect": {
+    "revision": "a000c57c33d0d0e0b3734b36517ed1fb8e171e1a",
+    "license": "CC0-1.0",
+    "attribution": "Meta ToolVerifier authors, Mekala et al. (2024)",
+    "url": "https://github.com/facebookresearch/ToolVerifier",
+    "source_rows": 555,
+    "rows": 552,
+    "excluded": [
+      {
+        "row_index": 36,
+        "reason": "Invalid ToolSelect target at row 36"
+      },
+      {
+        "row_index": 37,
+        "reason": "Invalid ToolSelect target at row 37"
+      },
+      {
+        "row_index": 38,
+        "reason": "Invalid ToolSelect target at row 38"
+      }
+    ],
+    "caveat": "Upstream training corpus evaluated exploratorily; not an official held-out ToolSelect score."
+  },
+  "transforms": [
+    "Keep source labels; all rows evaluation-only.",
+    "When2Call state contains question and available tools only; exclude target_tool, orig_tools and other answer metadata.",
+    "ToolSelect strips Thought/Act before building model inputs.",
+    "Deterministic per-ID option shuffle to reduce fixed-position bias."
+  ],
+  "no_training": true
+}

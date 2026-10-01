@@ -1,0 +1,10 @@
+.env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
+smoke-results*.json
+benchmark-results*.json
+benchmarks/private/
+benchmarks/public/raw/
+benchmarks/public/*.jsonl
